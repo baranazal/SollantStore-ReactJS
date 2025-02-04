@@ -1,0 +1,187 @@
+# Logs
+logs
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+lerna-debug.log*
+
+node_modules
+dist
+dist-ssr
+*.local
+
+# Editor directories and files
+.vscode/*
+!.vscode/extensions.json
+.idea
+.DS_Store
+*.suo
+*.ntvs*
+*.njsproj
+*.sln
+*.sw?
+
+# Environment files
+.env
+.env.local
+.env.development
+.env.production
+
+# Sollant Store - E-commerce Application
+
+## Docker Setup Guide
+
+### Prerequisites
+- Docker installed on your system
+- Docker Compose installed on your system
+- Git installed on your system
+
+### Getting Started
+
+1. Clone the repository:
+```bash
+git clone <repository-url>
+cd sollant-store
+```
+
+2. Create a `.env` file in the root directory with the following environment variables:
+```
+VITE_FIREBASE_API_KEY=your_firebase_api_key
+VITE_FIREBASE_AUTH_DOMAIN=your_firebase_auth_domain
+VITE_FIREBASE_PROJECT_ID=your_firebase_project_id
+VITE_FIREBASE_STORAGE_BUCKET=your_firebase_storage_bucket
+VITE_FIREBASE_MESSAGING_SENDER_ID=your_firebase_messaging_sender_id
+VITE_FIREBASE_APP_ID=your_firebase_app_id
+VITE_FIREBASE_MEASUREMENT_ID=your_firebase_measurement_id
+VITE_VONAGE_API_KEY=your_vonage_api_key
+VITE_VONAGE_API_SECRET=your_vonage_api_secret
+VITE_PAYPAL_CLIENT_ID=your_paypal_client_id
+```
+
+3. Create a `Dockerfile`:
+```dockerfile
+# Use Node.js base image
+FROM node:20-alpine
+
+# Set working directory
+WORKDIR /app
+
+# Copy package files
+COPY package*.json ./
+
+# Install dependencies
+RUN npm install
+
+# Copy project files
+COPY . .
+
+# Build the application
+RUN npm run build
+
+# Expose port
+EXPOSE 5173
+
+# Start the application
+CMD ["npm", "run", "dev"]
+```
+
+4. Create a `docker-compose.yml` file:
+```yaml
+version: '3.8'
+services:
+  app:
+    build: .
+    ports:
+      - "5173:5173"
+    volumes:
+      - .:/app
+      - /app/node_modules
+    environment:
+      - NODE_ENV=development
+    command: npm run dev -- --host
+```
+
+5. Build and run the Docker container:
+```bash
+# Build the Docker image
+docker-compose build
+
+# Start the container
+docker-compose up
+
+# To run in detached mode
+docker-compose up -d
+
+# To stop the container
+docker-compose down
+```
+
+### Accessing the Application
+Once the container is running, you can access the application at:
+- http://localhost:5173
+
+### Additional Docker Commands
+
+```bash
+# View running containers
+docker ps
+
+# View container logs
+docker-compose logs -f
+
+# SSH into container
+docker-compose exec app sh
+
+# Rebuild container after changes
+docker-compose up --build
+
+# Remove containers and volumes
+docker-compose down -v
+```
+
+### Project Structure
+```
+sollant-store/
+├── src/
+│   ├── components/
+│   ├── features/
+│   ├── hooks/
+│   ├── lib/
+│   ├── pages/
+│   ├── services/
+│   └── styles/
+├── public/
+├── .env
+├── Dockerfile
+├── docker-compose.yml
+├── package.json
+└── README.md
+```
+
+### Troubleshooting
+
+1. If you encounter permission issues:
+```bash
+# Change ownership of the node_modules directory
+sudo chown -R $USER:$USER node_modules
+```
+
+2. If the container fails to start:
+- Check if ports are already in use
+- Verify environment variables are set correctly
+- Check Docker logs for error messages
+
+3. If hot reloading isn't working:
+- Ensure volumes are mounted correctly
+- Verify the development server is running with the correct host settings
+
+### Notes
+- The application uses Vite as the build tool
+- Node.js version 20 is used in the Docker image
+- The container runs in development mode by default
+- Hot reloading is enabled for development
+- All environment variables must be set in the `.env` file
+
+For more information about the project and its features, please refer to the project documentation.
