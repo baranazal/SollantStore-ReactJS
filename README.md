@@ -134,6 +134,8 @@ sollant-store/
 | `category` | String | Product category (e.g., "Digital") |
 | `description` | String | Product description |
 | `name` | String | Product name |
+| `imageUrl` | String | Cloudinary image URL |
+| `imagePath` | String | Cloudinary public ID |
 
 #### 3. `users` Collection Schema
 | Field | Type | Description |
@@ -143,6 +145,35 @@ sollant-store/
 | `email` | String | User's email address |
 | `phoneNumber` | String | User's phone number |
 | `role` | String | User role (e.g., "user", "admin") |
+
+### Cloudinary Configuration
+
+#### Setup
+1. Create a Cloudinary account at cloudinary.com
+2. Get credentials from Dashboard:
+   - Cloud Name
+   - Upload Preset (create unsigned upload preset)
+
+#### Environment Variables
+```env
+VITE_CLOUDINARY_CLOUD_NAME=your_cloud_name
+VITE_CLOUDINARY_UPLOAD_PRESET=your_upload_preset
+```
+
+#### Image Upload Features
+- Supported Formats: JPG, JPEG, PNG, GIF, WEBP, TIFF, BMP, ICO, SVG, AVIF, HEIC/HEIF
+- Maximum File Size: 10MB
+- Automatic Image Optimization
+- Secure Upload Handling
+- CDN Delivery
+- Real-time Upload Progress
+- Image Preview
+
+#### Security Considerations
+- Using unsigned upload presets for client-side uploads
+- Restricted file types and sizes
+- Secure URL delivery (HTTPS)
+- Asset transformation restrictions
 
 ### Firestore Security Rules
 
