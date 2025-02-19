@@ -18,6 +18,13 @@ Sollant Store is a modern e-commerce platform built with React, Firebase, and Ta
 - 📦 Order History
 - 🔍 Product Search & Filtering
 - 👑 Admin Dashboard
+- 🖼️ Image Upload & Management
+  - Supports multiple formats (JPG, PNG, SVG, etc.)
+  - Cloud storage via Cloudinary
+  - Automatic image optimization
+  - Secure upload handling
+  - 10MB file size limit
+  - Preview before upload
 
 ## 🔧 Technologies Used
 
@@ -25,6 +32,7 @@ Sollant Store is a modern e-commerce platform built with React, Firebase, and Ta
 |----------|-------------|
 | Frontend | React, Tailwind CSS, Shadcn UI |
 | Backend | Firebase (Auth, Firestore) |
+| Storage | Cloudinary |
 | Payment | PayPal SDK |
 | State Management | React Context |
 | Build Tools | Vite |
