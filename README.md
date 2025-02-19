@@ -112,6 +112,9 @@ sollant-store/
 
 ## 🔥 Firebase Configuration
 
+### Overview
+Firebase provides the backend infrastructure for authentication, database, and security rules implementation.
+
 ### Authentication Setup
 
 #### Sign-In Methods
@@ -120,118 +123,94 @@ sollant-store/
 
 ### Firestore Database Collections
 
-#### 1. `orders` Collection Schema
+#### 1. `users` Collection
 | Field | Type | Description |
 |-------|------|-------------|
-| `items` | String | List of ordered products |
-| `timestamp` | String | Order creation timestamp |
-| `total_price` | String | Total order price |
-| `user_ID` | String | Reference to user who placed the order |
-
-#### 2. `products` Collection Schema
-| Field | Type | Description |
-|-------|------|-------------|
-| `category` | String | Product category (e.g., "Digital") |
-| `description` | String | Product description |
-| `name` | String | Product name |
-| `imageUrl` | String | Cloudinary image URL |
-| `imagePath` | String | Cloudinary public ID |
-
-#### 3. `users` Collection Schema
-| Field | Type | Description |
-|-------|------|-------------|
-| `address` | String | User's address (e.g., "Amman, Jordan") |
-| `createdAt` | Timestamp | User account creation date |
+| `address` | String | User's address |
+| `createdAt` | Timestamp | Account creation date |
 | `email` | String | User's email address |
 | `phoneNumber` | String | User's phone number |
-| `role` | String | User role (e.g., "user", "admin") |
+| `role` | String | User role ("user" or "admin") |
 
-## ☁️ Cloudinary Configuration
+#### 2. `products` Collection
+| Field | Type | Description |
+|-------|------|-------------|
+| `category` | String | Product category |
+| `description` | String | Product description |
+| `name` | String | Product name |
+| `imageUrl` | String | Image URL |
+| `imagePath` | String | Image path |
+| `price` | Number | Product price |
 
-### Overview
-Cloudinary serves as the cloud storage solution for all media assets in the application, providing robust image hosting and manipulation capabilities.
+#### 3. `orders` Collection
+| Field | Type | Description |
+|-------|------|-------------|
+| `items` | Array | List of ordered products |
+| `timestamp` | Timestamp | Order creation time |
+| `total_price` | Number | Total order price |
+| `userId` | String | Reference to user |
 
-### Setup Guide
+### Security Rules
 
-#### 1. Account Creation
-- Sign up at cloudinary.com
-- Access the Cloudinary Dashboard
-- Note your Cloud Name from Account Details
+```javascript
+// Firestore rules
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    // Allow users to create their own document during signup
+    match /users/{userId} {
+      allow create: if request.auth != null && request.auth.uid == userId;
+      allow read, update, delete: if request.auth != null && request.auth.uid == userId;
+    }
 
-#### 2. Upload Preset Configuration
-1. Navigate to Settings > Upload
-2. Create a new upload preset
-3. Set signing mode to "Unsigned"
-4. Configure optional upload parameters
-   - Folder structure
-   - Transformation settings
-   - Format optimization
+    // Allow admins to read/write all user documents
+    match /users/{userId} {
+      allow read, write: if isAdmin();
+    }
 
-#### 3. Environment Configuration
-```env
-VITE_CLOUDINARY_CLOUD_NAME=your_cloud_name
-VITE_CLOUDINARY_UPLOAD_PRESET=your_upload_preset
+    // Allow all users to read products
+    match /products/{product} {
+      allow read: if true;
+    }
+
+    // Allow admins to write to products
+    match /products/{product} {
+      allow write: if isAdmin();
+    }
+
+    // Allow authenticated users to read their own orders
+    match /orders/{order} {
+      allow read: if request.auth != null && request.auth.uid == resource.data.userId;
+    }
+
+    // Allow admins to read/write all orders
+    match /orders/{order} {
+      allow read, write: if isAdmin();
+    }
+
+    // Helper function to check if the user is an admin
+    function isAdmin() {
+      return request.auth != null && 
+             exists(/databases/$(database)/documents/users/$(request.auth.uid)) && 
+             get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == "admin";
+    }
+  }
+}
 ```
 
-### Features & Capabilities
+### Security Features
+- User authentication required for protected routes
+- Role-based access control (admin/user)
+- Secure data access patterns
+- Protected write operations
+- Document-level security
 
-#### Image Upload Support
-| Category | Supported Formats |
-|----------|------------------|
-| Standard Images | JPG, JPEG, PNG, GIF |
-| Web Optimized | WEBP, AVIF |
-| Vector Graphics | SVG |
-| Icons | ICO |
-| High Efficiency | HEIC/HEIF |
-| Professional | TIFF, BMP |
-
-#### Technical Specifications
-- **Maximum File Size**: 10MB per upload
-- **Transformation Support**: Real-time image manipulation
-- **Delivery**: Global CDN distribution
-- **Security**: HTTPS-only delivery
-
-### Security Measures
-
-#### Upload Security
-- Unsigned upload presets with restrictions
-- File type validation
-- Size limitations
-- Secure URL generation
-
-#### Asset Protection
-- HTTPS-only delivery
-- Transformation restrictions
-- Optional URL signing
-- Access control settings
-
-### Best Practices
-
-#### Upload Optimization
-- Enable auto-format delivery
-- Set reasonable size limits
-- Configure default transformations
-- Use structured folders
-
-#### Performance
-- Automatic CDN caching
-- Responsive image delivery
-- Format optimization
-- Quality auto-adjustment
-
-### Media Management
-
-#### Dashboard Features
-- Media Library interface
-- Asset organization
-- Usage analytics
-- Transformation management
-
-#### Administrative Tools
-- Bulk upload capabilities
-- Folder organization
-- Tag management
-- Search functionality
+### Access Patterns
+- Public access to product listings
+- Authenticated user access to own data
+- Admin access to all collections
+- Protected write operations
+- Secure order management
 
 ## 🐛 Known Issues & Fixes
 
