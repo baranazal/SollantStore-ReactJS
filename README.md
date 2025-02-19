@@ -212,6 +212,106 @@ service cloud.firestore {
 - Protected write operations
 - Secure order management
 
+## ☁️ Cloudinary Configuration
+
+### Overview
+Cloudinary serves as the cloud storage solution for all media assets in the application, providing robust image hosting and manipulation capabilities.
+
+### Setup Guide
+
+#### 1. Account Creation & Cloud Name
+1. Sign up at cloudinary.com
+2. After signing in, go to your Dashboard
+3. Find your Cloud Name in the "Account Details" section
+   - It's displayed at the top of your dashboard
+   - Usually a single word (e.g., "demo123")
+   - This is your `VITE_CLOUDINARY_CLOUD_NAME`
+
+#### 2. Upload Preset Configuration
+1. Navigate to Settings > Upload in your Cloudinary dashboard
+2. Scroll to "Upload presets" section
+3. Click "Add upload preset"
+4. In the new preset settings:
+   - Give it a memorable name (e.g., "store_uploads")
+   - Set "Signing Mode" to "Unsigned"
+   - Optional: Configure folder structure
+   - Optional: Set image transformations
+   - Click "Save"
+5. The preset name you created is your `VITE_CLOUDINARY_UPLOAD_PRESET`
+
+#### 3. Environment Configuration
+Create or update your `.env` file with:
+```env
+VITE_CLOUDINARY_CLOUD_NAME=your_cloud_name    # e.g., demo123
+VITE_CLOUDINARY_UPLOAD_PRESET=your_preset     # e.g., store_uploads
+```
+
+Example values:
+```env
+VITE_CLOUDINARY_CLOUD_NAME=demo123
+VITE_CLOUDINARY_UPLOAD_PRESET=store_uploads
+```
+
+### Features & Capabilities
+
+#### Image Upload Support
+| Category | Supported Formats |
+|----------|------------------|
+| Standard Images | JPG, JPEG, PNG, GIF |
+| Web Optimized | WEBP, AVIF |
+| Vector Graphics | SVG |
+| Icons | ICO |
+| High Efficiency | HEIC/HEIF |
+| Professional | TIFF, BMP |
+
+#### Technical Specifications
+- **Maximum File Size**: 10MB per upload
+- **Transformation Support**: Real-time image manipulation
+- **Delivery**: Global CDN distribution
+- **Security**: HTTPS-only delivery
+
+### Security Measures
+
+#### Upload Security
+- Unsigned upload presets with restrictions
+- File type validation
+- Size limitations
+- Secure URL generation
+
+#### Asset Protection
+- HTTPS-only delivery
+- Transformation restrictions
+- Optional URL signing
+- Access control settings
+
+### Best Practices
+
+#### Upload Optimization
+- Enable auto-format delivery
+- Set reasonable size limits
+- Configure default transformations
+- Use structured folders
+
+#### Performance
+- Automatic CDN caching
+- Responsive image delivery
+- Format optimization
+- Quality auto-adjustment
+
+### Media Management
+
+#### Dashboard Features
+- Media Library interface
+- Asset organization
+- Usage analytics
+- Transformation management
+
+#### Administrative Tools
+- Bulk upload capabilities
+- Folder organization
+- Tag management
+- Search functionality
+
 ## 🐛 Known Issues & Fixes
 
 | Issue | Status | Fix |
