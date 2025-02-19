@@ -146,93 +146,92 @@ sollant-store/
 | `phoneNumber` | String | User's phone number |
 | `role` | String | User role (e.g., "user", "admin") |
 
-### Cloudinary Configuration
+## ☁️ Cloudinary Configuration
 
-#### Setup
-1. Create a Cloudinary account at cloudinary.com
-2. Get credentials from Dashboard:
-   - Cloud Name
-   - Upload Preset (create unsigned upload preset)
+### Overview
+Cloudinary serves as the cloud storage solution for all media assets in the application, providing robust image hosting and manipulation capabilities.
 
-#### Environment Variables
+### Setup Guide
+
+#### 1. Account Creation
+- Sign up at cloudinary.com
+- Access the Cloudinary Dashboard
+- Note your Cloud Name from Account Details
+
+#### 2. Upload Preset Configuration
+1. Navigate to Settings > Upload
+2. Create a new upload preset
+3. Set signing mode to "Unsigned"
+4. Configure optional upload parameters
+   - Folder structure
+   - Transformation settings
+   - Format optimization
+
+#### 3. Environment Configuration
 ```env
 VITE_CLOUDINARY_CLOUD_NAME=your_cloud_name
 VITE_CLOUDINARY_UPLOAD_PRESET=your_upload_preset
 ```
 
-#### Image Upload Features
-- Supported Formats: JPG, JPEG, PNG, GIF, WEBP, TIFF, BMP, ICO, SVG, AVIF, HEIC/HEIF
-- Maximum File Size: 10MB
-- Automatic Image Optimization
-- Secure Upload Handling
-- CDN Delivery
-- Real-time Upload Progress
-- Image Preview
+### Features & Capabilities
 
-#### Security Considerations
-- Using unsigned upload presets for client-side uploads
-- Restricted file types and sizes
-- Secure URL delivery (HTTPS)
-- Asset transformation restrictions
+#### Image Upload Support
+| Category | Supported Formats |
+|----------|------------------|
+| Standard Images | JPG, JPEG, PNG, GIF |
+| Web Optimized | WEBP, AVIF |
+| Vector Graphics | SVG |
+| Icons | ICO |
+| High Efficiency | HEIC/HEIF |
+| Professional | TIFF, BMP |
 
-### Firestore Security Rules
+#### Technical Specifications
+- **Maximum File Size**: 10MB per upload
+- **Transformation Support**: Real-time image manipulation
+- **Delivery**: Global CDN distribution
+- **Security**: HTTPS-only delivery
 
-```firestore
-rules_version = '2';
-service cloud.firestore {
-  match /databases/{database}/documents {
-    // Allow users to create their own document during signup
-    match /users/{userId} {
-      allow create: if request.auth != null && request.auth.uid == userId;
-      allow read, update, delete: if request.auth != null && request.auth.uid == userId;
-    }
-    // Allow admins to read/write all user documents
-    match /users/{userId} {
-      allow read, write: if isAdmin();
-    }
-    // Allow all users to read products
-    match /products/{product} {
-      allow read: if true;
-    }
-    // Allow admins to write to products
-    match /products/{product} {
-      allow write: if isAdmin();
-    }
-    // Allow authenticated users to read their own orders
-    match /orders/{order} {
-      allow read: if request.auth != null && request.auth.uid == resource.data.userId;
-    }
-    // Allow admins to read/write all orders
-    match /orders/{order} {
-      allow read, write: if isAdmin();
-    }
-    // Helper function to check if the user is an admin
-    function isAdmin() {
-      return request.auth != null && 
-             exists(/databases/$(database)/documents/users/$(request.auth.uid)) && 
-             get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == "admin";
-    }
-  }
-}
-```
+### Security Measures
 
-### Initial Data Setup
+#### Upload Security
+- Unsigned upload presets with restrictions
+- File type validation
+- Size limitations
+- Secure URL generation
 
-#### Manual Data Population
-- **Important**: Initial data must be manually added to Firestore collections
-- Use Firebase Console or custom admin script to populate initial data
-- Ensure proper data structure matches the defined schemas
-
-#### Recommended Initial Setup
-1. Create an admin user in the `users` collection
-2. Add initial product catalog to the `products` collection
-3. Verify security rules are correctly implemented
+#### Asset Protection
+- HTTPS-only delivery
+- Transformation restrictions
+- Optional URL signing
+- Access control settings
 
 ### Best Practices
-- Always use Firebase Admin SDK for initial data seeding
-- Implement proper error handling during data creation
-- Validate data before inserting into Firestore
-- Use transaction and batch writes for complex data operations
+
+#### Upload Optimization
+- Enable auto-format delivery
+- Set reasonable size limits
+- Configure default transformations
+- Use structured folders
+
+#### Performance
+- Automatic CDN caching
+- Responsive image delivery
+- Format optimization
+- Quality auto-adjustment
+
+### Media Management
+
+#### Dashboard Features
+- Media Library interface
+- Asset organization
+- Usage analytics
+- Transformation management
+
+#### Administrative Tools
+- Bulk upload capabilities
+- Folder organization
+- Tag management
+- Search functionality
 
 ## 🐛 Known Issues & Fixes
 
