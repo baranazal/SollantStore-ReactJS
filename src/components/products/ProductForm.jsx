@@ -6,6 +6,9 @@ import { Label } from '@/components/ui/label';
 import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card';
 import Storage from '@/services/storage';
 import { useToast } from '@/hooks/use-toast';
+import { X } from 'lucide-react';
+import { AlertCircle } from 'lucide-react';
+import { Alert, AlertDescription } from '@/components/ui/alert';
 
 const ProductForm = ({ onSubmit, onCancel, initialData = null }) => {
   const [formData, setFormData] = useState({
@@ -19,6 +22,7 @@ const ProductForm = ({ onSubmit, onCancel, initialData = null }) => {
   const [imagePreview, setImagePreview] = useState(initialData?.imageUrl || '');
   const { toast } = useToast();
   const [loading, setLoading] = useState(false);
+  const [isImageMarkedForDeletion, setIsImageMarkedForDeletion] = useState(false);
 
   useEffect(() => {
     if (initialData) {
@@ -70,7 +74,18 @@ const ProductForm = ({ onSubmit, onCancel, initialData = null }) => {
 
       setImageFile(file);
       setImagePreview(URL.createObjectURL(file));
+      setIsImageMarkedForDeletion(false);
     }
+  };
+
+  const handleRemoveImage = () => {
+    setFormData(prev => ({
+      ...prev,
+      image: null
+    }));
+    setImagePreview(null);
+    setImageFile(null);
+    setIsImageMarkedForDeletion(true);
   };
 
   const handleSubmit = async (e) => {
@@ -80,29 +95,35 @@ const ProductForm = ({ onSubmit, onCancel, initialData = null }) => {
     try {
       let imageData = formData.image;
 
-      // Handle new image upload
-      if (imageFile) {
-        if (initialData?.imagePath) {
-          // Delete old image if updating
-          await Storage.deleteImage(initialData.imagePath);
-        }
-        imageData = await Storage.uploadImage(imageFile);
+      // If we're editing and the image was removed
+      if (initialData?.imagePath && !imageFile && !imagePreview) {
+        imageData = { remove: true };
+      }
+      // If there's a new image file
+      else if (imageFile) {
+        const uploadResult = await Storage.uploadImage(imageFile);
+        imageData = {
+          url: uploadResult.url,
+          path: uploadResult.path
+        };
+      }
+      // If we're editing and the image wasn't changed
+      else if (initialData?.imageUrl) {
+        imageData = {
+          url: initialData.imageUrl,
+          path: initialData.imagePath
+        };
       }
 
-      // Prepare form data
-      const submitData = {
+      await onSubmit({
         ...formData,
-        image: imageData,
-        price: parseFloat(formData.price)
-      };
-
-      await onSubmit(submitData);
+        image: imageData
+      });
     } catch (error) {
-      console.error('Error submitting form:', error);
       toast({
         title: "Error",
-        description: "Failed to save product",
-        variant: "destructive"
+        description: `Failed to save product: ${error.message}`,
+        variant: "destructive",
       });
     } finally {
       setLoading(false);
@@ -168,20 +189,43 @@ const ProductForm = ({ onSubmit, onCancel, initialData = null }) => {
 
           <div className="space-y-2">
             <Label htmlFor="image">Product Image</Label>
-            <Input
-              id="image"
-              name="image"
-              type="file"
-              accept="image/*,.ico,.svg,.webp,.avif,.heic,.heif"
-              onChange={handleImageChange}
-            />
-            {imagePreview && (
-              <img 
-                src={imagePreview} 
-                alt="Preview" 
-                className="mt-2 max-w-xs rounded-md"
+            <div className="flex flex-col gap-2">
+              {(imagePreview || initialData?.imageUrl) && (
+                <div className="space-y-2">
+                  <div className="relative w-40 h-40">
+                    <img
+                      src={imagePreview || initialData?.imageUrl}
+                      alt="Product preview"
+                      className="object-cover w-full h-full rounded-md"
+                    />
+                    <Button
+                      type="button"
+                      variant="destructive"
+                      size="icon"
+                      className="absolute top-2 right-2"
+                      onClick={handleRemoveImage}
+                    >
+                      <X className="h-4 w-4" />
+                    </Button>
+                  </div>
+                  {isImageMarkedForDeletion && (
+                    <Alert variant="destructive" className="mt-2">
+                      <AlertCircle className="h-4 w-4" />
+                      <AlertDescription>
+                        Image will be permanently deleted when you save the changes
+                      </AlertDescription>
+                    </Alert>
+                  )}
+                </div>
+              )}
+              <Input
+                id="image"
+                type="file"
+                accept="image/*"
+                onChange={handleImageChange}
+                className="cursor-pointer"
               />
-            )}
+            </div>
           </div>
 
           <div className="flex justify-end gap-4">

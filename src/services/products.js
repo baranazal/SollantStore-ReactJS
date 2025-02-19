@@ -31,8 +31,28 @@ export const addProduct = async (productData) => {
 export const updateProduct = async (productId, productData) => {
   try {
     const productRef = doc(db, 'products', productId);
-    await updateDoc(productRef, productData);
-    return { id: productId, ...productData };
+    const updateData = {
+      name: productData.name,
+      description: productData.description,
+      price: productData.price,
+      category: productData.category,
+    };
+
+    // Handle image update
+    if (productData.image) {
+      if (productData.image.remove) {
+        // If image was removed, remove the image fields
+        updateData.imageUrl = null;
+        updateData.imagePath = null;
+      } else if (productData.image.url) {
+        // If new image or keeping existing image
+        updateData.imageUrl = productData.image.url;
+        updateData.imagePath = productData.image.path;
+      }
+    }
+
+    await updateDoc(productRef, updateData);
+    return { id: productId, ...updateData };
   } catch (error) {
     console.error('Error updating product:', error);
     throw error;

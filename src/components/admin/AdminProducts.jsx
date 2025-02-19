@@ -7,6 +7,7 @@ import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { useToast } from '@/hooks/use-toast';
 import Products from '@/services/products';
+import Storage from '@/services/storage';
 
 const AdminProducts = () => {
   const [products, setProducts] = useState([]);
@@ -56,12 +57,17 @@ const AdminProducts = () => {
         // Update existing product
         const updatedProduct = await Products.updateProduct(selectedProduct.id, {
           name: formData.name,
-          price: parseFloat(formData.price),
           description: formData.description,
+          price: parseFloat(formData.price),
           category: formData.category,
-          ...(formData.image ? { imageUrl: formData.image.url, imagePath: formData.image.path } : {})
+          image: formData.image
         });
-        
+
+        // If image was removed, delete it from storage
+        if (formData.image?.remove && selectedProduct.imagePath) {
+          await Storage.deleteImage(selectedProduct.imagePath);
+        }
+
         setProducts(prevProducts =>
           prevProducts.map(product =>
             product.id === selectedProduct.id ? updatedProduct : product

@@ -1,13 +1,12 @@
-import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from "@/components/ui/sheet";
+import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger, SheetDescription } from "@/components/ui/sheet";
 import { Button } from '@/components/ui/button';
-import { Plus, Minus, Trash2, ArrowRight } from "lucide-react";
+import { Plus, Minus, Trash2, ArrowRight, ShoppingCart } from "lucide-react";
 import PropTypes from 'prop-types';
 import { useNavigate } from 'react-router-dom';
 import { auth } from '@/services/firebase';
 import { useState } from 'react';
-import { ShoppingCart } from "lucide-react";
 
-const CartSheet = ({ cart, setCart }) => {
+const CartSheet = ({ cart, setCart, children }) => {
   const [isOpen, setIsOpen] = useState(false);
   const navigate = useNavigate();
   const user = auth.currentUser;
@@ -40,22 +39,21 @@ const CartSheet = ({ cart, setCart }) => {
   return (
     <Sheet open={isOpen} onOpenChange={setIsOpen}>
       <SheetTrigger asChild>
-        <Button variant="outline" size="icon" className="relative">
-          <ShoppingCart className="h-5 w-5" />
-          {cart.length > 0 && (
-            <span className="absolute -top-2 -right-2 bg-red-500 text-white rounded-full w-5 h-5 text-xs flex items-center justify-center animate-bounce">
-              {cart.reduce((total, item) => total + item.quantity, 0)}
-            </span>
-          )}
-        </Button>
+        {children}
       </SheetTrigger>
       <SheetContent className="w-[90vw] sm:w-[540px] transition-transform duration-500 ease-out data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:slide-out-to-right data-[state=open]:slide-in-from-right">
         <SheetHeader>
           <SheetTitle>Shopping Cart</SheetTitle>
+          <SheetDescription>
+            Manage your items and proceed to checkout
+          </SheetDescription>
         </SheetHeader>
         <div className="mt-8">
           {cart.length === 0 ? (
-            <p className="text-center text-muted-foreground">Your cart is empty</p>
+            <div className="flex flex-col items-center justify-center h-full space-y-4">
+              <ShoppingCart className="w-12 h-12 text-muted-foreground" />
+              <p className="text-muted-foreground">Your cart is empty</p>
+            </div>
           ) : (
             <>
               <div className="space-y-4">
