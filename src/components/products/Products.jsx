@@ -3,9 +3,10 @@ import PropTypes from 'prop-types';
 import { collection, getDocs, query, where } from 'firebase/firestore';
 import { db } from '@/services/firebase';
 import { Button } from '@/components/ui/button';
-import { Card, CardHeader, CardTitle, CardDescription, CardContent } from '@/components/ui/card';
+import { Card, CardHeader, CardTitle, CardDescription, CardContent, CardFooter } from '@/components/ui/card';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { useToast } from '@/hooks/use-toast';
+import { Plus, Minus } from 'lucide-react';
 
 const Products = ({ category, addToCart }) => {
   const [products, setProducts] = useState([]);
@@ -47,17 +48,18 @@ const Products = ({ category, addToCart }) => {
   const updateQuantity = (productId, change) => {
     setQuantities(prev => ({
       ...prev,
-      [productId]: Math.max(1, prev[productId] + change)
+      [productId]: Math.max(1, (prev[productId] || 1) + change)
     }));
   };
 
   const handleAddToCart = (product) => {
-    const quantity = quantities[product.id];
-    const productWithQuantity = {
-      ...product,
-      quantity: quantity
-    };
-    addToCart(productWithQuantity);
+    const quantity = quantities[product.id] || 1;
+    addToCart(product, quantity);
+    // Reset quantity after adding to cart
+    setQuantities(prev => ({
+      ...prev,
+      [product.id]: 1
+    }));
     toast({
       title: "🛍️ Added to Cart",
       description: `${quantity}x ${product.name} added to your cart ✨`,
@@ -80,6 +82,15 @@ const Products = ({ category, addToCart }) => {
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
             {products.map((product) => (
               <Card key={product.id}>
+                {product.imageUrl && (
+                  <div className="relative aspect-video">
+                    <img
+                      src={product.imageUrl}
+                      alt={product.name}
+                      className="object-cover w-full h-full rounded-t-lg"
+                    />
+                  </div>
+                )}
                 <CardHeader>
                   <CardTitle>{product.name}</CardTitle>
                   <CardDescription>${product.price}</CardDescription>
@@ -100,25 +111,28 @@ const Products = ({ category, addToCart }) => {
                       variant="outline"
                       size="icon"
                       onClick={() => updateQuantity(product.id, -1)}
-                      disabled={quantities[product.id] <= 1}
                     >
-                      -
+                      <Minus className="h-4 w-4" />
                     </Button>
-                    <span>{quantities[product.id]}</span>
+                    <span className="w-8 text-center">
+                      {quantities[product.id] || 1}
+                    </span>
                     <Button
                       variant="outline"
                       size="icon"
                       onClick={() => updateQuantity(product.id, 1)}
                     >
-                      +
+                      <Plus className="h-4 w-4" />
                     </Button>
                   </div>
-                  <Button
-                    onClick={() => handleAddToCart(product)}
-                    className="w-full"
-                  >
-                    Add to Cart
-                  </Button>
+                  <CardFooter className="flex justify-between items-center">
+                    <Button
+                      onClick={() => handleAddToCart(product)}
+                      className="w-full"
+                    >
+                      Add to Cart
+                    </Button>
+                  </CardFooter>
                 </CardContent>
               </Card>
             ))}

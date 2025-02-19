@@ -1,8 +1,8 @@
-import { Link, useLocation } from 'react-router-dom';
+import { Link } from 'react-router-dom';
 import { auth } from '@/services/firebase';
 import { useTheme } from '@/features/themes/useTheme';
 import { Button } from '@/components/ui/button';
-import { Moon, Sun, ShoppingCart, ShieldCheck, Home, Laptop, FileDown, LogOut, Menu } from 'lucide-react';
+import { Moon, Sun, ShoppingCart, ShieldCheck, Home, Laptop, FileDown, LogOut } from 'lucide-react';
 import CartSheet from '@/components/cart/CartSheet';
 import PropTypes from 'prop-types';
 import lightLogo from '@/assets/light_theme_logo.png';
@@ -12,62 +12,43 @@ import { db } from '@/services/firebase';
 import { useState, useEffect } from 'react';
 import { useToast } from '@/hooks/use-toast';
 import { signOut } from 'firebase/auth';
-import { NavLink } from 'react-router-dom';
 import { User2 } from 'lucide-react';
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
 
 const Navbar = ({ cart, setCart }) => {
   const { theme, toggleTheme } = useTheme();
-  const location = useLocation();
   const user = auth.currentUser;
   const { toast } = useToast();
   const [isAdmin, setIsAdmin] = useState(false);
 
-  // Check if we're on auth pages (login/signup)
-  const isAuthPage = ['/login', '/signup'].includes(location.pathname);
-
-  // Navigation links configuration
-  const navLinks = [
-    { path: '/', label: 'Home', icon: <Home className="h-4 w-4" /> },
-    { path: '/electronics', label: 'Electronics', icon: <Laptop className="h-4 w-4" /> },
-    { path: '/digital', label: 'Digital', icon: <FileDown className="h-4 w-4" /> },
-    ...(user ? [{ path: '/orders', label: 'Orders', icon: <ShoppingCart className="h-4 w-4" /> }] : []),
-    ...(isAdmin ? [{ path: '/admin', label: 'Admin Panel', icon: <ShieldCheck className="h-4 w-4" /> }] : []),
-  ];
+  // Calculate total quantity of items in cart
+  const cartItemsCount = cart.reduce((total, item) => total + item.quantity, 0);
 
   // Add useEffect to check admin role
   useEffect(() => {
-    const checkAdminRole = async () => {
+    const checkAdminStatus = async () => {
       if (user) {
         const userDoc = await getDoc(doc(db, 'users', user.uid));
-        if (userDoc.exists() && userDoc.data().role === 'admin') {
-          setIsAdmin(true);
-        }
+        setIsAdmin(userDoc.exists() && userDoc.data().role === 'admin');
+      } else {
+        setIsAdmin(false);
       }
     };
-    checkAdminRole();
+    checkAdminStatus();
   }, [user]);
 
   const handleLogout = async () => {
     try {
       await signOut(auth);
       toast({
-        title: "Logged Out!",
-        description: "👋 You have been logged out successfully",
-        duration: 3000,
+        title: "Logged out successfully",
+        description: "See you next time! 👋",
       });
     } catch (error) {
-      console.error('Error logging out:', error);
+      console.error('Logout error:', error);
       toast({
-        title: "Error",
-        description: "❌ Failed to log out. Please try again.",
         variant: "destructive",
-        duration: 3000,
+        title: "Error",
+        description: "Failed to log out. Please try again.",
       });
     }
   };
@@ -88,77 +69,72 @@ const Navbar = ({ cart, setCart }) => {
             </Link>
           </div>
 
-          {/* Navigation Links - only visible when logged in and not on auth pages */}
-          {user && !isAuthPage && (
-            <div className="hidden md:flex items-center gap-6">
-              {navLinks.map((link) => (
-                <NavLink 
-                  key={link.path} 
-                  to={link.path} 
-                  className="nav-link-hover flex items-center gap-2"
-                >
-                  {link.icon}
-                  {link.label}
-                </NavLink>
-              ))}
-            </div>
-          )}
+          {/* Navigation Links - Modified to ensure visibility */}
+          <div className="flex items-center gap-6">
+            <Link 
+              to="/" 
+              className="flex items-center gap-1 hover:text-primary transition-colors"
+            >
+              <Home className="h-5 w-5" />
+              <span>Home</span>
+            </Link>
+            <Link 
+              to="/electronics" 
+              className="flex items-center gap-1 hover:text-primary transition-colors"
+            >
+              <Laptop className="h-5 w-5" />
+              <span>Electronics</span>
+            </Link>
+            <Link 
+              to="/digital" 
+              className="flex items-center gap-1 hover:text-primary transition-colors"
+            >
+              <FileDown className="h-5 w-5" />
+              <span>Digital</span>
+            </Link>
+          </div>
 
           <div className="flex items-center gap-4">
-            {user && !isAuthPage && (
-              <>
-                {/* Mobile Menu Dropdown */}
-                <DropdownMenu>
-                  <DropdownMenuTrigger asChild className="md:hidden">
-                    <Button variant="ghost" size="icon">
-                      <Menu className="h-5 w-5" />
-                    </Button>
-                  </DropdownMenuTrigger>
-                  <DropdownMenuContent align="end" className="w-48">
-                    {navLinks.map((link) => (
-                      <DropdownMenuItem key={link.path} asChild>
-                        <Link
-                          to={link.path}
-                          className="flex items-center gap-2 w-full"
-                        >
-                          {link.icon}
-                          {link.label}
-                        </Link>
-                      </DropdownMenuItem>
-                    ))}
-                  </DropdownMenuContent>
-                </DropdownMenu>
+            {/* Cart */}
+            <CartSheet cart={cart} setCart={setCart}>
+              <Button variant="ghost" size="icon" className="relative">
+                <ShoppingCart className="h-5 w-5" />
+                {cartItemsCount > 0 && (
+                  <span className="absolute -top-1 -right-1 bg-red-500 text-white rounded-full w-4 h-4 text-xs flex items-center justify-center">
+                    {cartItemsCount}
+                  </span>
+                )}
+              </Button>
+            </CartSheet>
 
-                {/* Cart with notification badge */}
-                <div className="relative">
-                  <CartSheet cart={cart} setCart={setCart}>
-                    <Button variant="ghost" size="icon">
-                      <ShoppingCart className="h-5 w-5" />
-                      {cart.length > 0 && (
-                        <span className="absolute -top-2 -right-2 h-5 w-5 rounded-full bg-destructive text-destructive-foreground text-xs flex items-center justify-center">
-                          {cart.reduce((total, item) => total + item.quantity, 0)}
-                        </span>
-                      )}
-                    </Button>
-                  </CartSheet>
-                </div>
-
-                {/* Profile Menu */}
-                <Link to="/profile">
-                  <Button variant="ghost" size="icon">
+            {/* Authentication Buttons */}
+            {!user ? (
+              <div className="flex items-center gap-2">
+                <Button variant="ghost" asChild>
+                  <Link to="/login">Login</Link>
+                </Button>
+                <Button variant="default" asChild>
+                  <Link to="/signup">Sign Up</Link>
+                </Button>
+              </div>
+            ) : (
+              <div className="flex items-center gap-2">
+                <Button variant="ghost" size="icon" asChild>
+                  <Link to="/profile">
                     <User2 className="h-5 w-5" />
+                  </Link>
+                </Button>
+                {isAdmin && (
+                  <Button variant="ghost" size="icon" asChild>
+                    <Link to="/admin">
+                      <ShieldCheck className="h-5 w-5" />
+                    </Link>
                   </Button>
-                </Link>
-
-                {/* Logout Button */}
-                <Button 
-                  variant="ghost" 
-                  size="icon"
-                  onClick={handleLogout}
-                >
+                )}
+                <Button variant="ghost" size="icon" onClick={handleLogout}>
                   <LogOut className="h-5 w-5" />
                 </Button>
-              </>
+              </div>
             )}
 
             {/* Theme Toggle - always visible */}

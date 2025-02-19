@@ -6,6 +6,7 @@ import { Button } from '@/components/ui/button';
 import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { useToast } from '@/hooks/use-toast';
+import Products from '@/services/products';
 
 const AdminProducts = () => {
   const [products, setProducts] = useState([]);
@@ -49,28 +50,57 @@ const AdminProducts = () => {
     setShowForm(true);
   };
 
-  const handleSave = (productData) => {
-    if (selectedProduct) {
-      // Update existing product in the list
-      setProducts(products.map(p => 
-        p.id === selectedProduct.id ? productData : p
-      ));
+  const handleSubmit = async (formData) => {
+    try {
+      if (selectedProduct) {
+        // Update existing product
+        const updatedProduct = await Products.updateProduct(selectedProduct.id, {
+          name: formData.name,
+          price: parseFloat(formData.price),
+          description: formData.description,
+          category: formData.category,
+          ...(formData.image ? { imageUrl: formData.image.url, imagePath: formData.image.path } : {})
+        });
+        
+        setProducts(prevProducts =>
+          prevProducts.map(product =>
+            product.id === selectedProduct.id ? updatedProduct : product
+          )
+        );
+        
+        toast({
+          title: "Success",
+          description: "Product updated successfully",
+        });
+      } else {
+        // Add new product
+        const newProduct = await Products.addProduct({
+          name: formData.name,
+          price: parseFloat(formData.price),
+          description: formData.description,
+          category: formData.category,
+          imageUrl: formData.image?.url,
+          imagePath: formData.image?.path
+        });
+        
+        setProducts(prev => [...prev, newProduct]);
+        
+        toast({
+          title: "Success",
+          description: "Product added successfully",
+        });
+      }
+      
+      setShowForm(false);
+      setSelectedProduct(null);
+    } catch (error) {
+      console.error('Error saving product:', error);
       toast({
-        title: "Success",
-        description: "Product updated successfully",
-        duration: 3000,
-      });
-    } else {
-      // Add new product to the list
-      setProducts([...products, productData]);
-      toast({
-        title: "Success",
-        description: "Product added successfully",
-        duration: 3000,
+        title: "Error",
+        description: error.message || "Failed to save product",
+        variant: "destructive"
       });
     }
-    setShowForm(false);
-    setSelectedProduct(null);
   };
 
   const handleCancel = () => {
@@ -155,9 +185,9 @@ const AdminProducts = () => {
           </div>
           {showForm ? (
             <ProductForm
-              product={selectedProduct}
-              onSave={handleSave}
+              onSubmit={handleSubmit}
               onCancel={handleCancel}
+              initialData={selectedProduct}
               categories={categories}
             />
           ) : (
